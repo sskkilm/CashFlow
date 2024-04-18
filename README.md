@@ -2,9 +2,19 @@
 
 간단한 계좌 입출금 및 송금 서비스입니다.
 
-## 목표
+## Goal
   - Spring Boot 기반 REST API 설계
   - Spring Security를 이용한 인증과 인가 구현 (JWT)
+
+## Tech Stack
+<div align=center> 
+  <img src="https://img.shields.io/badge/java-007396?style=for-the-badge&logo=java&logoColor=white"> 
+  <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+  <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> 
+  <img src="https://img.shields.io/badge/springsecurity-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"> 
+  <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> 
+  <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
+</div>
 
 ## 프로젝트 기능 및 설계
 - 회원가입
@@ -54,6 +64,9 @@
   - 수금 계좌번호, 송금액, 송금 완료 후 송금 계좌의 잔액, 송금일자가 목록으로 조회된다.
 
 ## ERD
+![ERD](doc/img/CashFlow.png)
+
 ## Trouble Shooting
+[trouble shooting section](doc/TROUBLE_SHOOTING.md)
+
 ## Something To Improve
-## Tech Stack
