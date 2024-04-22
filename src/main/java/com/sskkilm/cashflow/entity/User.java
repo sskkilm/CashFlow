@@ -1,12 +1,14 @@
 package com.sskkilm.cashflow.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,9 +17,9 @@ public class User {
     private String loginId;
     private String password;
     private String role;
-    @CreationTimestamp
+    @CreatedDate
     private LocalDateTime createdAt;
-    @UpdateTimestamp
+    @LastModifiedDate
     private LocalDateTime modifiedAt;
 
 }
