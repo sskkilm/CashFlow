@@ -6,7 +6,6 @@ import com.sskkilm.cashflow.enums.UserErrorCode;
 import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 

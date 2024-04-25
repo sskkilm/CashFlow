@@ -9,7 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity()
 public class SecurityConfiguration {
 
     @Bean
@@ -32,9 +32,9 @@ public class SecurityConfiguration {
         // 경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        // 로그인 없이 접근할 수 있는 경로
+                        // 인증, 인가없이 접근할 수 있는 경로
                         .requestMatchers("/", "/join", "/login").permitAll()
-                        // 나머지 경로는 로그인한 사용자만 접근 가능
+                        // 나머지 경로는 인증된 사용자만 접근 가능 (인증된 사용자 = USER 권한)
                         .anyRequest().authenticated());
         // 세션 설정
         http
