@@ -1,5 +1,6 @@
 package com.sskkilm.cashflow.entity;
 
+import com.sskkilm.cashflow.enums.Authority;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,14 +23,15 @@ public class User {
     private Long id;
     private String loginId;
     private String password;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Authority role;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 
     @Builder
-    public User(String loginId, String password, String role) {
+    public User(String loginId, String password, Authority role) {
         this.loginId = loginId;
         this.password = password;
         this.role = role;

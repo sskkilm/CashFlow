@@ -33,7 +33,7 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests((auth) -> auth
                         // 인증, 인가없이 접근할 수 있는 경로
-                        .requestMatchers("/", "/join", "/login").permitAll()
+                        .requestMatchers("/", "/users/join", "/users/login").permitAll()
                         // 나머지 경로는 인증된 사용자만 접근 가능 (인증된 사용자 = USER 권한)
                         .anyRequest().authenticated());
         // 세션 설정

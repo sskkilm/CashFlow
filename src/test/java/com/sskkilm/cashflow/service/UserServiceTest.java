@@ -2,6 +2,7 @@ package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.JoinDto;
 import com.sskkilm.cashflow.entity.User;
+import com.sskkilm.cashflow.enums.Authority;
 import com.sskkilm.cashflow.enums.UserErrorCode;
 import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.repository.UserRepository;
@@ -40,7 +41,7 @@ class UserServiceTest {
                 .willReturn(User.builder()
                         .loginId("root")
                         .password("root")
-                        .role("USER")
+                        .role(Authority.ROLE_USER)
                         .build());
         given(bCryptPasswordEncoder.encode(any()))
                 .willReturn("root");
@@ -53,7 +54,7 @@ class UserServiceTest {
         //then
         assertEquals("root", response.loginId());
         assertEquals("root", response.password());
-        assertEquals("USER", response.role());
+        assertEquals(Authority.ROLE_USER, response.role());
     }
 
     @Test

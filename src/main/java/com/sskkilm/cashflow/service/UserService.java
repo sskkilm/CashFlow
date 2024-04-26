@@ -2,6 +2,7 @@ package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.JoinDto;
 import com.sskkilm.cashflow.entity.User;
+import com.sskkilm.cashflow.enums.Authority;
 import com.sskkilm.cashflow.enums.UserErrorCode;
 import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.repository.UserRepository;
@@ -24,7 +25,7 @@ public class UserService {
         User user = userRepository.save(User.builder()
                 .loginId(request.loginId())
                 .password(bCryptPasswordEncoder.encode(request.password()))
-                .role("USER")
+                .role(Authority.ROLE_USER)
                 .build());
 
         return JoinDto.Response.fromEntity(user);

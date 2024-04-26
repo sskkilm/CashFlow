@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.dto;
 
 import com.sskkilm.cashflow.entity.User;
+import com.sskkilm.cashflow.enums.Authority;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
@@ -19,7 +20,7 @@ public class JoinDto {
             Long id,
             String loginId,
             String password,
-            String role
+            Authority role
     ) {
         public static Response fromEntity(User user) {
             return Response.builder()

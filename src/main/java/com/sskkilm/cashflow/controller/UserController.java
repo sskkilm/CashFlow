@@ -14,7 +14,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/join")
+    @PostMapping("/users/join")
     public JoinDto.Response createUser(
             @RequestBody @Valid JoinDto.Request request
     ) {

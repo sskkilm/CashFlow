@@ -3,6 +3,7 @@ package com.sskkilm.cashflow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sskkilm.cashflow.config.SecurityConfiguration;
 import com.sskkilm.cashflow.dto.JoinDto;
+import com.sskkilm.cashflow.enums.Authority;
 import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -45,12 +46,12 @@ class UserControllerTest {
                                 .id(1L)
                                 .loginId("root")
                                 .password("root")
-                                .role("USER")
+                                .role(Authority.ROLE_USER)
                                 .build()
                 );
         //when
         //then
-        mockMvc.perform(post("/join")
+        mockMvc.perform(post("/users/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new JoinDto.Request("root", "root")
@@ -59,7 +60,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.loginId").value("root"))
                 .andExpect(jsonPath("$.password").value("root"))
-                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.role").value("ROLE_USER"))
                 .andDo(print());
     }
 
@@ -71,7 +72,7 @@ class UserControllerTest {
                 .willThrow(new CustomException(ALREADY_EXIST_USER));
         //when
         //then
-        mockMvc.perform(post("/join")
+        mockMvc.perform(post("/users/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new JoinDto.Request("root", "root")
