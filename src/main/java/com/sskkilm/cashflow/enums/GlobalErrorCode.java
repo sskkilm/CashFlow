@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum GlobalErrorCode implements ErrorCode{
+public enum GlobalErrorCode implements ErrorCode {
 
     INVALID_REQUEST(400, "잘못된 요청입니다.");
 

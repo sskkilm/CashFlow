@@ -18,4 +18,5 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return new ErrorResponse(400, GlobalErrorCode.INVALID_REQUEST, GlobalErrorCode.INVALID_REQUEST.getMessage());
     }
+
 }
