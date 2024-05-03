@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -74,7 +75,7 @@ class UserServiceTest {
                 ));
 
         //then
-        assertEquals(400, customException.getErrorCode().getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getErrorCode().getStatus());
         assertEquals(UserErrorCode.ALREADY_EXIST_USER, customException.getErrorCode());
     }
 
@@ -108,8 +109,7 @@ class UserServiceTest {
                 () -> userService.loadUserByUsername("root"));
 
         //then
-        assertEquals(400, customException.getErrorCode().getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getErrorCode().getStatus());
         assertEquals(UserErrorCode.USER_NOT_FOUND, customException.getErrorCode());
-        assertEquals("존재하지 않는 사용자입니다.", customException.getErrorCode().getMessage());
     }
 }

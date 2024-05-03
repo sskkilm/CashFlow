@@ -69,12 +69,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
-        ErrorResponse errorResponse = new ErrorResponse(UserErrorCode.LOGIN_FAILED.getStatus(),
-                UserErrorCode.LOGIN_FAILED, UserErrorCode.LOGIN_FAILED.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                UserErrorCode.LOGIN_FAILED, UserErrorCode.LOGIN_FAILED.getMessage()
+        );
 
         ObjectMapper objectMapper = new ObjectMapper();
         String result = objectMapper.writeValueAsString(errorResponse);
 
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write(result);
     }
 }
