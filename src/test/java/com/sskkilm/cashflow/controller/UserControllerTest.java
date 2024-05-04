@@ -6,6 +6,8 @@ import com.sskkilm.cashflow.config.SecurityConfiguration;
 import com.sskkilm.cashflow.dto.JoinDto;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.Authority;
+import com.sskkilm.cashflow.enums.GlobalErrorCode;
+import com.sskkilm.cashflow.enums.UserErrorCode;
 import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.service.UserService;
 import com.sskkilm.cashflow.util.JwtUtil;
@@ -16,11 +18,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.sskkilm.cashflow.enums.UserErrorCode.ALREADY_EXIST_USER;
 import static com.sskkilm.cashflow.enums.UserErrorCode.LOGIN_FAILED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -77,22 +77,36 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("회원가입 실패 - 이미 존재하는 사용자")
-    void createUser_fail() throws Exception {
+    @DisplayName("회원가입 실패 - 아이디 공백")
+    void createUser_fail_loginIdBlank() throws Exception {
         //given
-        given(userService.createUser(any()))
-                .willThrow(new CustomException(ALREADY_EXIST_USER));
         //when
         //then
         mockMvc.perform(post("/users/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new JoinDto.Request("root", "root")
+                                new JoinDto.Request("", "root")
                         )))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.errorCode").value("ALREADY_EXIST_USER"))
-                .andExpect(jsonPath("$.message").value(ALREADY_EXIST_USER.getMessage()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 - 비밀번호 공백")
+    void createUser_fail_passwordBlank() throws Exception {
+        //given
+        //when
+        //then
+        mockMvc.perform(post("/users/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new JoinDto.Request("root", "")
+                        )))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
                 .andDo(print());
     }
 
@@ -125,7 +139,7 @@ class UserControllerTest {
     void login_fail() throws Exception {
         //given
         given(userService.loadUserByUsername(any()))
-                .willThrow(new UsernameNotFoundException("user not found"));
+                .willThrow(new CustomException(UserErrorCode.USER_NOT_FOUND));
 
         //when
         //then
@@ -133,8 +147,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("loginId", "root")
                         .param("password", "root"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value("LOGIN_FAILED"))
                 .andExpect(jsonPath("$.message").value(LOGIN_FAILED.getMessage()))
                 .andDo(print());

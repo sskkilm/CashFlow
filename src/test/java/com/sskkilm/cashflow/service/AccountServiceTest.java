@@ -1,0 +1,123 @@
+package com.sskkilm.cashflow.service;
+
+import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.entity.Account;
+import com.sskkilm.cashflow.entity.User;
+import com.sskkilm.cashflow.enums.AccountErrorCode;
+import com.sskkilm.cashflow.enums.AccountStatus;
+import com.sskkilm.cashflow.enums.Authority;
+import com.sskkilm.cashflow.exception.CustomException;
+import com.sskkilm.cashflow.repository.AccountRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+
+@ExtendWith(MockitoExtension.class)
+class AccountServiceTest {
+
+    @Mock
+    private AccountRepository accountRepository;
+
+    @InjectMocks
+    private AccountService accountService;
+
+    @Test
+    @DisplayName("계좌 생성 성공")
+    void createAccount_success() {
+        //given
+        given(accountRepository.existsByAccountNumber(any()))
+                .willReturn(false);
+        given(accountRepository.findByUser(any()))
+                .willReturn(List.of());
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.save(any()))
+                .willReturn(
+                        Account.builder()
+                                .id(1L)
+                                .accountNumber("1122334455")
+                                .balance(100)
+                                .status(AccountStatus.ACTIVE)
+                                .user(user)
+                                .build()
+                );
+
+        //when
+        CreateAccountDto.Request request = new CreateAccountDto.Request("1234512345", 1000);
+        CreateAccountDto.Response response = accountService.createAccount(request, user);
+
+        //then
+        assertEquals(1L, response.accountId());
+        assertEquals("1122334455", response.accountNumber());
+        assertEquals(100, response.balance());
+        assertEquals(AccountStatus.ACTIVE, response.status());
+        assertEquals(1L, response.userId());
+    }
+
+    @Test
+    @DisplayName("계좌 생성 실패 - 이미 존재하는 계좌")
+    void createAccount_fail_accountAlreadyExists() {
+        //given
+        given(accountRepository.existsByAccountNumber(any()))
+                .willReturn(true);
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+
+        //when
+        CreateAccountDto.Request request = new CreateAccountDto.Request("1234512345", 1000);
+        CustomException customException = assertThrows(CustomException.class, () -> accountService.createAccount(request, user));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_ALREADY_EXISTS.getStatus(), customException.getErrorCode().getStatus());
+        assertEquals(AccountErrorCode.ACCOUNT_ALREADY_EXISTS, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("계좌 생성 실패 - 계좌는 최대 10개")
+    void createAccount_fail_accountCreationLimit() {
+        //given
+        given(accountRepository.existsByAccountNumber(any()))
+                .willReturn(false);
+        List<Account> accountList = new ArrayList<>();
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        for (int i = 0; i < 10; i++) {
+            accountList.add(Account.builder()
+                    .user(user)
+                    .build());
+        }
+        given(accountRepository.findByUser(any()))
+                .willReturn(accountList);
+
+        //when
+        CreateAccountDto.Request request = new CreateAccountDto.Request("1234512345", 1000);
+        CustomException customException = assertThrows(CustomException.class, () -> accountService.createAccount(request, user));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_CREATION_LIMIT.getStatus(), customException.getErrorCode().getStatus());
+        assertEquals(AccountErrorCode.ACCOUNT_CREATION_LIMIT, customException.getErrorCode());
+    }
+}
