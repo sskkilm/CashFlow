@@ -21,8 +21,4 @@ public class UserController {
         return userService.createUser(request);
     }
 
-    // 로그인 처리는 필터단에서 일어나도록 구현
-    // 따로 컨트롤러 로직 작성할 필요없음
-    // @PostMapping("/users/login")
-
 }

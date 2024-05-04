@@ -6,13 +6,12 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
-public enum GlobalErrorCode implements ErrorCode {
+public enum AccountErrorCode implements ErrorCode {
 
-    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
+    ACCOUNT_CREATION_LIMIT(HttpStatus.FORBIDDEN, "계좌는 최대 10개까지 생성할 수 있습니다."),
+    ACCOUNT_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 계좌입니다."),
     ;
 
     private final HttpStatus status;
     private final String message;
-
 }
