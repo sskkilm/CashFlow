@@ -1,6 +1,9 @@
 package com.sskkilm.cashflow.enums;
 
+import org.springframework.http.HttpStatus;
+
 public interface ErrorCode {
-    public Integer getStatus();
+    public HttpStatus getStatus();
+
     public String getMessage();
 }
