@@ -3,7 +3,9 @@ package com.sskkilm.cashflow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sskkilm.cashflow.config.SecurityConfiguration;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.User;
+import com.sskkilm.cashflow.enums.AccountStatus;
 import com.sskkilm.cashflow.enums.Authority;
 import com.sskkilm.cashflow.enums.GlobalErrorCode;
 import com.sskkilm.cashflow.service.AccountService;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -124,5 +127,38 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
                 .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
                 .andDo(print());
+    }
+
+    @Test
+    @DisplayName("계좌 해지")
+    void inactiveAccount() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.inactiveAccount(1L, user))
+                .willReturn(InactiveAccountDto.Response.builder()
+                        .id(1L)
+                        .accountNumber("11223344")
+                        .balance(1000)
+                        .status(AccountStatus.INACTIVE)
+                        .userId(1L)
+                        .build());
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/1")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.accountNumber").value("11223344"))
+                .andExpect(jsonPath("$.balance").value(1000))
+                .andExpect(jsonPath("$.status").value("INACTIVE"))
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andDo(print());
+
     }
 }
