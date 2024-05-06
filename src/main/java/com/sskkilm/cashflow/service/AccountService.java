@@ -1,9 +1,6 @@
 package com.sskkilm.cashflow.service;
 
-import com.sskkilm.cashflow.dto.AccountDto;
-import com.sskkilm.cashflow.dto.CreateAccountDto;
-import com.sskkilm.cashflow.dto.DeleteAccountDto;
-import com.sskkilm.cashflow.dto.InactiveAccountDto;
+import com.sskkilm.cashflow.dto.*;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountErrorCode;
@@ -93,5 +90,15 @@ public class AccountService {
 
         return accountList.stream().map(AccountDto::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    public GetAccountDto getAccount(Long accountId, User user) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+
+        return GetAccountDto.fromEntity(account);
     }
 }
