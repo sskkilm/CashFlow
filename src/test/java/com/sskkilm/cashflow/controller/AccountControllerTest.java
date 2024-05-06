@@ -2,10 +2,7 @@ package com.sskkilm.cashflow.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sskkilm.cashflow.config.SecurityConfiguration;
-import com.sskkilm.cashflow.dto.CreateAccountDto;
-import com.sskkilm.cashflow.dto.DeleteAccountDto;
-import com.sskkilm.cashflow.dto.InactiveAccountDto;
-import com.sskkilm.cashflow.dto.AccountDto;
+import com.sskkilm.cashflow.dto.*;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountStatus;
 import com.sskkilm.cashflow.enums.Authority;
@@ -21,6 +18,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -316,6 +316,50 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$[0].status").value("INACTIVE"))
                 .andExpect(jsonPath("$[2].accountId").value(3L))
                 .andExpect(jsonPath("$[0].status").value("INACTIVE"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("특정 계좌 조회")
+    void getAccount() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        LocalDateTime createdAt = LocalDateTime.of(
+                LocalDate.of(2024, 5, 5),
+                LocalTime.of(6, 30)
+        );
+        LocalDateTime modifiedAt = LocalDateTime.of(
+                LocalDate.of(2024, 5, 5),
+                LocalTime.of(7, 30)
+        );
+        given(accountService.getAccount(1L, user))
+                .willReturn(
+                        GetAccountDto.builder()
+                                .accountId(1L)
+                                .accountNumber("1122334455")
+                                .balance(1000)
+                                .status(AccountStatus.ACTIVE)
+                                .createdAt(createdAt)
+                                .modifiedAt(modifiedAt)
+                                .build()
+                );
+        //when
+        //then
+        mockMvc.perform(get("/accounts/1")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountId").value(1L))
+                .andExpect(jsonPath("$.accountNumber").value("1122334455"))
+                .andExpect(jsonPath("$.balance").value(1000))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.createdAt").value("2024-05-05T06:30:00"))
+                .andExpect(jsonPath("$.modifiedAt").value("2024-05-05T07:30:00"))
                 .andDo(print());
     }
 }

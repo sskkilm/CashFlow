@@ -1,9 +1,6 @@
 package com.sskkilm.cashflow.service;
 
-import com.sskkilm.cashflow.dto.AccountDto;
-import com.sskkilm.cashflow.dto.CreateAccountDto;
-import com.sskkilm.cashflow.dto.DeleteAccountDto;
-import com.sskkilm.cashflow.dto.InactiveAccountDto;
+import com.sskkilm.cashflow.dto.*;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountErrorCode;
@@ -474,5 +471,103 @@ class AccountServiceTest {
         assertEquals(AccountStatus.INACTIVE, activeAccountList.get(1).status());
         assertEquals(3L, activeAccountList.get(2).accountId());
         assertEquals(AccountStatus.INACTIVE, activeAccountList.get(2).status());
+    }
+
+    @Test
+    @DisplayName("특정 계좌 조회 성공")
+    void getAccount_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        LocalDateTime createdAt = LocalDateTime.of(
+                LocalDate.of(2024, 5, 5),
+                LocalTime.of(6, 30)
+        );
+        LocalDateTime modifiedAt = LocalDateTime.of(
+                LocalDate.of(2024, 5, 5),
+                LocalTime.of(7, 30)
+        );
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .accountNumber("1122334455")
+                                .balance(1000)
+                                .status(AccountStatus.ACTIVE)
+                                .createdAt(createdAt)
+                                .modifiedAt(modifiedAt)
+                                .build()
+                ));
+
+        //when
+        GetAccountDto getAccountDto = accountService.getAccount(1L, user);
+
+        //then
+        assertEquals(1L, getAccountDto.accountId());
+        assertEquals("1122334455", getAccountDto.accountNumber());
+        assertEquals(1000, getAccountDto.balance());
+        assertEquals(AccountStatus.ACTIVE, getAccountDto.status());
+        assertEquals(createdAt, getAccountDto.createdAt());
+        assertEquals(modifiedAt, getAccountDto.modifiedAt());
+    }
+
+    @Test
+    @DisplayName("특정 계좌 조회 실패 - 존재하지 않는 계좌")
+    void getAccount_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.getAccount(1L, user)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("특정 계좌 조회 실패 - 계좌 소유주 다름")
+    void getAccount_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.getAccount(1L, user2)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
     }
 }
