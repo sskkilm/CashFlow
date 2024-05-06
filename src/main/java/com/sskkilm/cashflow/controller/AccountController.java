@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.controller;
 
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.service.AccountService;
@@ -36,5 +37,16 @@ public class AccountController {
         User user = (User) authentication.getPrincipal();
 
         return accountService.inactiveAccount(accountId, user);
+    }
+
+    @DeleteMapping("/accounts/{accountId}")
+    public DeleteAccountDto.Response deleteAccount(
+            @PathVariable Long accountId
+    ) {
+        // 로그인 중인 사용자 정보 불러오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        return accountService.deleteAccount(accountId, user);
     }
 }

@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.User;
@@ -57,5 +58,17 @@ public class AccountService {
         account.inactive();
 
         return InactiveAccountDto.Response.fromEntity(account);
+    }
+
+    public DeleteAccountDto.Response deleteAccount(Long accountId, User user) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+
+        accountRepository.delete(account);
+
+        return DeleteAccountDto.Response.fromEntity(account);
     }
 }
