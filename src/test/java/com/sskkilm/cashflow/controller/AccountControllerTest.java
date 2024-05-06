@@ -3,6 +3,7 @@ package com.sskkilm.cashflow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sskkilm.cashflow.config.SecurityConfiguration;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountStatus;
@@ -22,8 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -160,5 +160,36 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andDo(print());
 
+    }
+
+    @Test
+    @DisplayName("계좌 삭제")
+    void deleteAccount() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.deleteAccount(1L, user))
+                .willReturn(DeleteAccountDto.Response.builder()
+                        .id(1L)
+                        .accountNumber("11223344")
+                        .balance(1000)
+                        .userId(1L)
+                        .build());
+
+        //when
+        //then
+        mockMvc.perform(delete("/accounts/1")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.accountNumber").value("11223344"))
+                .andExpect(jsonPath("$.balance").value(1000))
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andDo(print());
     }
 }

@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.User;
@@ -194,7 +195,8 @@ class AccountServiceTest {
                                 .id(1L)
                                 .status(AccountStatus.ACTIVE)
                                 .user(user1)
-                                .build()));
+                                .build())
+                );
 
         //when
         CustomException customException = assertThrows(CustomException.class,
@@ -221,7 +223,8 @@ class AccountServiceTest {
                                 .id(1L)
                                 .status(AccountStatus.INACTIVE)
                                 .user(user)
-                                .build()));
+                                .build())
+                );
 
         //when
         CustomException customException = assertThrows(CustomException.class,
@@ -230,5 +233,86 @@ class AccountServiceTest {
 
         //then
         assertEquals(AccountErrorCode.ACCOUNT_ALREADY_INACTIVE, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("계좌 삭제 성공")
+    void deleteAccount_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .build())
+                );
+
+        //when
+        DeleteAccountDto.Response response = accountService.deleteAccount(1L, user);
+
+        //then
+        assertEquals(1L, response.id());
+        assertEquals(1L, response.userId());
+    }
+
+    @Test
+    @DisplayName("계좌 삭제 실패 - 존재하지 않는 계좌")
+    void deleteAccount_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.deleteAccount(1L, user)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("계좌 삭제 실패 - 계좌 소유주 다름")
+    void deleteAccount_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.deleteAccount(1L, user2)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
     }
 }
