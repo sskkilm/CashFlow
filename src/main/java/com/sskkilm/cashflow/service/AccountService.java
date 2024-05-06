@@ -1,5 +1,6 @@
 package com.sskkilm.cashflow.service;
 
+import com.sskkilm.cashflow.dto.AccountDto;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
 import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,5 +72,26 @@ public class AccountService {
         accountRepository.delete(account);
 
         return DeleteAccountDto.Response.fromEntity(account);
+    }
+
+    public List<AccountDto> getTotalAccountList(User user) {
+        List<Account> accountList = accountRepository.findAllByUserOrderByCreatedAt(user);
+
+        return accountList.stream().map(AccountDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<AccountDto> getActiveAccountList(User user) {
+        List<Account> accountList = accountRepository.findAllByUserAndStatusOrderByCreatedAt(user, AccountStatus.ACTIVE);
+
+        return accountList.stream().map(AccountDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<AccountDto> getInactiveAccountList(User user) {
+        List<Account> accountList = accountRepository.findAllByUserAndStatusOrderByCreatedAt(user, AccountStatus.INACTIVE);
+
+        return accountList.stream().map(AccountDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

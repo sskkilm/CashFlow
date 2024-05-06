@@ -3,6 +3,7 @@ package com.sskkilm.cashflow.controller;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
 import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
+import com.sskkilm.cashflow.dto.AccountDto;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.service.AccountService;
 import jakarta.validation.Valid;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,5 +51,32 @@ public class AccountController {
         User user = (User) authentication.getPrincipal();
 
         return accountService.deleteAccount(accountId, user);
+    }
+
+    @GetMapping("/accounts")
+    public List<AccountDto> getTotalAccountList() {
+        // 로그인 중인 사용자 정보 불러오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        return accountService.getTotalAccountList(user);
+    }
+
+    @GetMapping("/accounts/active")
+    public List<AccountDto> getActiveAccountList() {
+        // 로그인 중인 사용자 정보 불러오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        return accountService.getActiveAccountList(user);
+    }
+
+    @GetMapping("/accounts/inactive")
+    public List<AccountDto> getInactiveAccountList() {
+        // 로그인 중인 사용자 정보 불러오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+
+        return accountService.getInactiveAccountList(user);
     }
 }
