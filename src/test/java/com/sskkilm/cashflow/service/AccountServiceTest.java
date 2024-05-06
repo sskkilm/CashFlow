@@ -1,5 +1,6 @@
 package com.sskkilm.cashflow.service;
 
+import com.sskkilm.cashflow.dto.AccountDto;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
 import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
@@ -17,6 +18,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -314,5 +318,161 @@ class AccountServiceTest {
 
         //then
         assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("전체 계좌 목록 조회")
+    void getTotalAccountList() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        List<Account> accountList = List.of(
+                Account.builder()
+                        .id(1L)
+                        .user(user)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 4),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(2L)
+                        .user(user)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 5),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(3L)
+                        .user(user)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 6),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build()
+        );
+        given(accountRepository.findAllByUserOrderByCreatedAt(user))
+                .willReturn(accountList);
+
+        //when
+        List<AccountDto> totalAccountList = accountService.getTotalAccountList(user);
+
+        //then
+        assertEquals(1L, totalAccountList.get(0).accountId());
+        assertEquals(2L, totalAccountList.get(1).accountId());
+        assertEquals(3L, totalAccountList.get(2).accountId());
+    }
+
+    @Test
+    @DisplayName("활성 계좌 목록 조회")
+    void getActiveAccountList() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        List<Account> accountList = List.of(
+                Account.builder()
+                        .id(1L)
+                        .user(user)
+                        .status(AccountStatus.ACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 4),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(2L)
+                        .user(user)
+                        .status(AccountStatus.ACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 5),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(3L)
+                        .user(user)
+                        .status(AccountStatus.ACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 6),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build()
+        );
+        given(accountRepository.findAllByUserAndStatusOrderByCreatedAt(user, AccountStatus.ACTIVE))
+                .willReturn(accountList);
+
+        //when
+        List<AccountDto> activeAccountList = accountService.getActiveAccountList(user);
+
+        //then
+        assertEquals(1L, activeAccountList.get(0).accountId());
+        assertEquals(AccountStatus.ACTIVE, activeAccountList.get(0).status());
+        assertEquals(2L, activeAccountList.get(1).accountId());
+        assertEquals(AccountStatus.ACTIVE, activeAccountList.get(0).status());
+        assertEquals(3L, activeAccountList.get(2).accountId());
+        assertEquals(AccountStatus.ACTIVE, activeAccountList.get(0).status());
+    }
+
+    @Test
+    @DisplayName("비활성 계좌 목록 조회")
+    void getInactiveAccountList() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        List<Account> accountList = List.of(
+                Account.builder()
+                        .id(1L)
+                        .user(user)
+                        .status(AccountStatus.INACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 4),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(2L)
+                        .user(user)
+                        .status(AccountStatus.INACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 5),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build(),
+                Account.builder()
+                        .id(3L)
+                        .user(user)
+                        .status(AccountStatus.INACTIVE)
+                        .createdAt(LocalDateTime.of(
+                                LocalDate.of(2024, 5, 6),
+                                LocalTime.of(6, 30)
+                        ))
+                        .build()
+        );
+        given(accountRepository.findAllByUserAndStatusOrderByCreatedAt(user, AccountStatus.INACTIVE))
+                .willReturn(accountList);
+
+        //when
+        List<AccountDto> activeAccountList = accountService.getInactiveAccountList(user);
+
+        //then
+        assertEquals(1L, activeAccountList.get(0).accountId());
+        assertEquals(AccountStatus.INACTIVE, activeAccountList.get(0).status());
+        assertEquals(2L, activeAccountList.get(1).accountId());
+        assertEquals(AccountStatus.INACTIVE, activeAccountList.get(1).status());
+        assertEquals(3L, activeAccountList.get(2).accountId());
+        assertEquals(AccountStatus.INACTIVE, activeAccountList.get(2).status());
     }
 }

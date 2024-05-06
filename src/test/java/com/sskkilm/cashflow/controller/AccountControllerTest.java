@@ -5,6 +5,7 @@ import com.sskkilm.cashflow.config.SecurityConfiguration;
 import com.sskkilm.cashflow.dto.CreateAccountDto;
 import com.sskkilm.cashflow.dto.DeleteAccountDto;
 import com.sskkilm.cashflow.dto.InactiveAccountDto;
+import com.sskkilm.cashflow.dto.AccountDto;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountStatus;
 import com.sskkilm.cashflow.enums.Authority;
@@ -19,6 +20,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -190,6 +193,129 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.accountNumber").value("11223344"))
                 .andExpect(jsonPath("$.balance").value(1000))
                 .andExpect(jsonPath("$.userId").value(1L))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("전체 계좌 목록 조회")
+    void getTotalAccountList() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.getTotalAccountList(user))
+                .willReturn(
+                        List.of(
+                                AccountDto.builder()
+                                        .accountId(1L)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(2L)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(3L)
+                                        .build()
+                        )
+                );
+
+        //when
+        //then
+        mockMvc.perform(get("/accounts")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountId").value(1L))
+                .andExpect(jsonPath("$[1].accountId").value(2L))
+                .andExpect(jsonPath("$[2].accountId").value(3L))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("활성 계좌 목록 조회")
+    void getActiveAccountList() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.getActiveAccountList(user))
+                .willReturn(
+                        List.of(
+                                AccountDto.builder()
+                                        .accountId(1L)
+                                        .status(AccountStatus.ACTIVE)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(2L)
+                                        .status(AccountStatus.ACTIVE)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(3L)
+                                        .status(AccountStatus.ACTIVE)
+                                        .build()
+                        )
+                );
+
+        //when
+        //then
+        mockMvc.perform(get("/accounts/active")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountId").value(1L))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$[1].accountId").value(2L))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$[2].accountId").value(3L))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("비활성 계좌 목록 조회")
+    void getInactiveAccountList() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.getInactiveAccountList(user))
+                .willReturn(
+                        List.of(
+                                AccountDto.builder()
+                                        .accountId(1L)
+                                        .status(AccountStatus.INACTIVE)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(2L)
+                                        .status(AccountStatus.INACTIVE)
+                                        .build(),
+                                AccountDto.builder()
+                                        .accountId(3L)
+                                        .status(AccountStatus.INACTIVE)
+                                        .build()
+                        )
+                );
+
+        //when
+        //then
+        mockMvc.perform(get("/accounts/inactive")
+                        .with(user(user))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].accountId").value(1L))
+                .andExpect(jsonPath("$[0].status").value("INACTIVE"))
+                .andExpect(jsonPath("$[1].accountId").value(2L))
+                .andExpect(jsonPath("$[0].status").value("INACTIVE"))
+                .andExpect(jsonPath("$[2].accountId").value(3L))
+                .andExpect(jsonPath("$[0].status").value("INACTIVE"))
                 .andDo(print());
     }
 }
