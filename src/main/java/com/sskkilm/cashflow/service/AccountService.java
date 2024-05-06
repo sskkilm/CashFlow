@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.CreateAccountDto;
+import com.sskkilm.cashflow.dto.InactiveAccountDto;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.enums.AccountErrorCode;
@@ -9,8 +10,10 @@ import com.sskkilm.cashflow.exception.CustomException;
 import com.sskkilm.cashflow.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,5 +41,21 @@ public class AccountService {
                 .build());
 
         return CreateAccountDto.Response.fromEntity(account);
+    }
+
+    @Transactional
+    public InactiveAccountDto.Response inactiveAccount(Long accountId, User user) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+        if (account.getStatus() == AccountStatus.INACTIVE) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_ALREADY_INACTIVE);
+        }
+
+        account.inactive();
+
+        return InactiveAccountDto.Response.fromEntity(account);
     }
 }

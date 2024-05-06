@@ -32,4 +32,7 @@ public class Account {
     @LastModifiedDate
     private LocalDateTime modifiedAt;
 
+    public void inactive() {
+        this.status = AccountStatus.INACTIVE;
+    }
 }
