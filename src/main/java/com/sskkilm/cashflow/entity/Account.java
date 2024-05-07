@@ -35,4 +35,8 @@ public class Account {
     public void inactive() {
         this.status = AccountStatus.INACTIVE;
     }
+
+    public void deposit(Integer depositAmount) {
+        this.balance += depositAmount;
+    }
 }

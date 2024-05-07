@@ -13,6 +13,7 @@ public enum AccountErrorCode implements ErrorCode {
     ACCOUNT_ALREADY_INACTIVE(HttpStatus.BAD_REQUEST, "이미 해지된 계좌입니다."),
     ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 계좌입니다."),
     ACCOUNT_USER_UN_MATCH(HttpStatus.BAD_REQUEST, "계좌와 소유주가 다릅니다."),
+    ACCOUNT_INACTIVE(HttpStatus.BAD_REQUEST, "비활성된 계좌입니다."),
     ;
 
     private final HttpStatus status;

@@ -102,4 +102,26 @@ public class AccountService {
 
         return GetAccountDto.fromEntity(account);
     }
+
+    @Transactional
+    public DepositDto.Response deposit(DepositDto.Request request, User user) {
+        Account account = accountRepository.findById(request.accountId())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+        if (account.getStatus() == AccountStatus.INACTIVE) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_INACTIVE);
+        }
+
+        Integer balanceBeforeDeposit = account.getBalance();
+        account.deposit(request.depositAmount());
+
+        return DepositDto.Response.builder()
+                .accountId(account.getId())
+                .balanceBeforeDeposit(balanceBeforeDeposit)
+                .depositAmount(request.depositAmount())
+                .balanceAfterDeposit(account.getBalance())
+                .build();
+    }
 }

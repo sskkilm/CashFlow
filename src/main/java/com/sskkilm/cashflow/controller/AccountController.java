@@ -68,4 +68,12 @@ public class AccountController {
     ) {
         return accountService.getAccount(accountId, user);
     }
+
+    @PatchMapping("/accounts/deposit")
+    public DepositDto.Response deposit(
+            @RequestBody @Valid DepositDto.Request request,
+            @AuthenticationPrincipal User user
+    ) {
+        return accountService.deposit(request, user);
+    }
 }
