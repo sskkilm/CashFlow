@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private static final int MAXIMUM_NUMBER_OF_ACCOUNTS = 10;
 
     public CreateAccountDto.Response createAccount(CreateAccountDto.Request request, User user) {
         // 이미 존재하는 계좌일 경우 예외 처리
@@ -29,7 +30,7 @@ public class AccountService {
 
         // 한 유저가 생성한 계좌가 10개 이상일 경우 예외 처리
         List<Account> accountList = accountRepository.findByUser(user);
-        if (accountList.size() >= 10) {
+        if (accountList.size() >= MAXIMUM_NUMBER_OF_ACCOUNTS) {
             throw new CustomException(AccountErrorCode.ACCOUNT_CREATION_LIMIT);
         }
 
