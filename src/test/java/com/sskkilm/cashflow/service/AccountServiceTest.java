@@ -570,4 +570,122 @@ class AccountServiceTest {
         //then
         assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
     }
+
+    @Test
+    @DisplayName("입금 성공")
+    void deposit_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .balance(1000)
+                                .status(AccountStatus.ACTIVE)
+                                .build()
+                ));
+
+        //when
+        DepositDto.Response response = accountService.deposit(
+                new DepositDto.Request(1L, 1000), user);
+
+        //then
+        assertEquals(1L, response.accountId());
+        assertEquals(1000, response.balanceBeforeDeposit());
+        assertEquals(1000, response.depositAmount());
+        assertEquals(2000, response.balanceAfterDeposit());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 존재하지 않는 계좌")
+    void deposit_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.deposit(
+                        new DepositDto.Request(1L, 1000), user));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 계좌 소유주 다름")
+    void deposit_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.deposit(
+                        new DepositDto.Request(1L, 1000), user2
+                )
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 사용할 수 없는 계좌")
+    void deposit_fail_inactiveAccount() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .status(AccountStatus.INACTIVE)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.deposit(
+                        new DepositDto.Request(1L, 1000), user
+                )
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_CAN_NOT_USE, customException.getErrorCode());
+    }
 }

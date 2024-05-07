@@ -111,7 +111,7 @@ public class AccountService {
             throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
         }
         if (account.getStatus() == AccountStatus.INACTIVE) {
-            throw new CustomException(AccountErrorCode.ACCOUNT_INACTIVE);
+            throw new CustomException(AccountErrorCode.ACCOUNT_CAN_NOT_USE);
         }
 
         Integer balanceBeforeDeposit = account.getBalance();
