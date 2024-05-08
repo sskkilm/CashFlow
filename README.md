@@ -68,9 +68,9 @@
   - 수금 계좌번호, 송금액, 송금 완료 후 송금 계좌의 잔액, 송금일자가 목록으로 조회된다.
 
 ## ERD
-![ERD](doc/img/CashFlow.png)
+![ERD](docs/img/CashFlow.png)
 
 ## Trouble Shooting
-[trouble shooting section](doc/TROUBLE_SHOOTING.md)
+[trouble shooting section](docs/TROUBLE_SHOOTING.md)
 
 ## Something To Improve
