@@ -362,4 +362,176 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.modifiedAt").value("2024-05-05T07:30:00"))
                 .andDo(print());
     }
+
+    @Test
+    @DisplayName("입금 성공")
+    void deposit_success() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.deposit(any(), any()))
+                .willReturn(
+                        DepositDto.Response.builder()
+                                .accountId(1L)
+                                .balanceBeforeDeposit(1000)
+                                .depositAmount(1000)
+                                .balanceAfterDeposit(2000)
+                                .build()
+                );
+
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/deposit")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new DepositDto.Request(1L, 1000)
+                        ))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountId").value(1L))
+                .andExpect(jsonPath("$.balanceBeforeDeposit").value(1000))
+                .andExpect(jsonPath("$.depositAmount").value(1000))
+                .andExpect(jsonPath("$.balanceAfterDeposit").value(2000))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 계좌 아이디 1보다 작음")
+    void deposit_fail_accountIdLessThan1() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/deposit")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new DepositDto.Request(0L, 1000)
+                        ))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 입금액 0보다 작음")
+    void deposit_fail_depositAmountLessThan0() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/deposit")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new DepositDto.Request(1L, -1)
+                        ))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("출금 성공")
+    void withdraw_success() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountService.withdraw(any(), any()))
+                .willReturn(
+                        WithdrawDto.Response.builder()
+                                .accountId(1L)
+                                .balanceBeforeWithdraw(2000)
+                                .withdrawAmount(1000)
+                                .balanceAfterWithdraw(1000)
+                                .build()
+                );
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/withdraw")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new WithdrawDto.Request(1L, 1000)
+                        ))
+                )
+                .andExpect(jsonPath("$.accountId").value(1L))
+                .andExpect(jsonPath("$.balanceBeforeWithdraw").value(2000))
+                .andExpect(jsonPath("$.withdrawAmount").value(1000))
+                .andExpect(jsonPath("$.balanceAfterWithdraw").value(1000))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 계좌 아이디 1보다 작음")
+    void withdraw_fail_accountIdLessThan1() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/withdraw")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new WithdrawDto.Request(0L, 1000)
+                        ))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 출금액 0보다 작음")
+    void withdraw_fail_depositAmountLessThan0() throws Exception {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        //when
+        //then
+        mockMvc.perform(patch("/accounts/withdraw")
+                        .with(user(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new WithdrawDto.Request(1L, -1)
+                        ))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(GlobalErrorCode.INVALID_REQUEST.getMessage()))
+                .andDo(print());
+    }
 }

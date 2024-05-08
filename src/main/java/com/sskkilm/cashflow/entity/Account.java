@@ -35,4 +35,12 @@ public class Account {
     public void inactive() {
         this.status = AccountStatus.INACTIVE;
     }
+
+    public void deposit(Integer depositAmount) {
+        this.balance += depositAmount;
+    }
+
+    public void withdraw(Integer withdrawAmount) {
+        this.balance -= withdrawAmount;
+    }
 }

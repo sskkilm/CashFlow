@@ -68,4 +68,20 @@ public class AccountController {
     ) {
         return accountService.getAccount(accountId, user);
     }
+
+    @PatchMapping("/accounts/deposit")
+    public DepositDto.Response deposit(
+            @RequestBody @Valid DepositDto.Request request,
+            @AuthenticationPrincipal User user
+    ) {
+        return accountService.deposit(request, user);
+    }
+
+    @PatchMapping("/accounts/withdraw")
+    public WithdrawDto.Response withdraw(
+            @RequestBody @Valid WithdrawDto.Request request,
+            @AuthenticationPrincipal User user
+    ) {
+        return accountService.withdraw(request, user);
+    }
 }
