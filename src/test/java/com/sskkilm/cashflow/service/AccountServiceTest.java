@@ -688,4 +688,152 @@ class AccountServiceTest {
         //then
         assertEquals(AccountErrorCode.ACCOUNT_CAN_NOT_USE, customException.getErrorCode());
     }
+
+    @Test
+    @DisplayName("출금 성공")
+    void withdraw_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .status(AccountStatus.ACTIVE)
+                                .balance(2000)
+                                .build()
+                ));
+
+        //when
+        WithdrawDto.Response response = accountService.withdraw(
+                new WithdrawDto.Request(1L, 1000), user
+        );
+
+        //then
+        assertEquals(1L, response.accountId());
+        assertEquals(2000, response.balanceBeforeWithdraw());
+        assertEquals(1000, response.withdrawAmount());
+        assertEquals(1000, response.balanceAfterWithdraw());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 존재하지 않는 계좌")
+    void withdraw_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.withdraw(
+                        new WithdrawDto.Request(1L, 1000), user
+                ));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 계좌 소유주 다름")
+    void withdraw_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.withdraw(
+                        new WithdrawDto.Request(1L, 1000), user2
+                ));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 사용할 수 없는 계좌")
+    void withdraw_fail_AccountCanNotUse() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .status(AccountStatus.INACTIVE)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.withdraw(
+                        new WithdrawDto.Request(1L, 1000), user
+                ));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_CAN_NOT_USE, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("출금 실패 - 계좌 잔액 부족")
+    void withdraw_fail_AccountBalanceInsufficient() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .status(AccountStatus.ACTIVE)
+                                .balance(1000)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> accountService.withdraw(
+                        new WithdrawDto.Request(1L, 2000), user
+                ));
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_BALANCE_INSUFFICIENT, customException.getErrorCode());
+    }
 }
