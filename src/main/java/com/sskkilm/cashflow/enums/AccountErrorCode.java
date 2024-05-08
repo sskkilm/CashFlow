@@ -14,6 +14,7 @@ public enum AccountErrorCode implements ErrorCode {
     ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 계좌입니다."),
     ACCOUNT_USER_UN_MATCH(HttpStatus.BAD_REQUEST, "계좌와 소유주가 다릅니다."),
     ACCOUNT_CAN_NOT_USE(HttpStatus.BAD_REQUEST, "사용할 수 없는 계좌입니다."),
+    ACCOUNT_BALANCE_INSUFFICIENT(HttpStatus.BAD_REQUEST, "계좌 잔액이 부족합니다"),
     ;
 
     private final HttpStatus status;

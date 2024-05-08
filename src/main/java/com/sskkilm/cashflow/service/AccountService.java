@@ -124,4 +124,29 @@ public class AccountService {
                 .balanceAfterDeposit(account.getBalance())
                 .build();
     }
+
+    @Transactional
+    public WithdrawDto.Response withdraw(WithdrawDto.Request request, User user) {
+        Account account = accountRepository.findById(request.accountId())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+        if (account.getStatus() == AccountStatus.INACTIVE) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_CAN_NOT_USE);
+        }
+        if (account.getBalance() < request.withdrawAmount()) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_BALANCE_INSUFFICIENT);
+        }
+
+        Integer balanceBeforeWithdraw = account.getBalance();
+        account.withdraw(request.withdrawAmount());
+
+        return WithdrawDto.Response.builder()
+                .accountId(account.getId())
+                .balanceBeforeWithdraw(balanceBeforeWithdraw)
+                .withdrawAmount(request.withdrawAmount())
+                .balanceAfterWithdraw(account.getBalance())
+                .build();
+    }
 }
