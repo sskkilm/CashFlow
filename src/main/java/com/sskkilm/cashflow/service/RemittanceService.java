@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.CreateRemittanceDto;
+import com.sskkilm.cashflow.dto.RemittanceDto;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.Remittance;
 import com.sskkilm.cashflow.entity.User;
@@ -14,7 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,5 +64,35 @@ public class RemittanceService {
         );
 
         return CreateRemittanceDto.Response.fromEntity(remittance);
+    }
+
+    public List<RemittanceDto> getRemittanceList(Long accountId, User user) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+
+        List<Remittance> remittanceList = remittanceRepository
+                .findAllByAccountOrderByCreatedAtDesc(account);
+
+        return remittanceList.stream().map(RemittanceDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<RemittanceDto> getRemittanceList(
+            Long accountId, User user, LocalDateTime startDate, LocalDateTime endDate
+    ) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        if (!Objects.equals(account.getUser().getId(), user.getId())) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_USER_UN_MATCH);
+        }
+
+        List<Remittance> remittanceList = remittanceRepository
+                .findAllByAccountOrderByCreatedAtBetweenDesc(account, startDate, endDate);
+
+        return remittanceList.stream().map(RemittanceDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }
