@@ -1,6 +1,7 @@
 package com.sskkilm.cashflow.service;
 
 import com.sskkilm.cashflow.dto.CreateRemittanceDto;
+import com.sskkilm.cashflow.dto.RemittanceDto;
 import com.sskkilm.cashflow.entity.Account;
 import com.sskkilm.cashflow.entity.Remittance;
 import com.sskkilm.cashflow.entity.User;
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -350,5 +352,230 @@ class RemittanceServiceTest {
 
         //then
         assertEquals(RemittanceErrorCode.REMITTANCE_AND_RECEIVING_ACCOUNT_SAME, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("모든 송금 내역 조회 성공")
+    void getRemittanceList_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .build()
+                ));
+        LocalDateTime createdAt1 = LocalDateTime.of(
+                2024, 5, 5,
+                0, 0
+        );
+        List<Remittance> remittanceList = List.of(
+                Remittance.builder()
+                        .receivingAccountNumber("1122334455")
+                        .amount(1000)
+                        .accountBalanceSnapshot(0)
+                        .createdAt(createdAt1)
+                        .build()
+        );
+        given(remittanceRepository.findAllByAccountOrderByCreatedAtDesc(any()))
+                .willReturn(remittanceList);
+
+        //when
+        List<RemittanceDto> remittanceDtoList = remittanceService.getRemittanceList(1L, user);
+
+        //then
+        assertEquals("1122334455", remittanceDtoList.get(0).receivingAccountNumber());
+        assertEquals(1000, remittanceDtoList.get(0).remittanceAmount());
+        assertEquals(0, remittanceDtoList.get(0).accountBalanceSnapshot());
+        assertEquals(createdAt1, remittanceDtoList.get(0).createdAt());
+    }
+
+    @Test
+    @DisplayName("모든 송금 내역 조회 실패 - 존재하지 않는 계좌")
+    void getRemittanceList_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> remittanceService.getRemittanceList(1L, user)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("모든 송금 내역 조회 실패 - 계좌 소유주 다름")
+    void getRemittanceList_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> remittanceService.getRemittanceList(1L, user2)
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("기간 내 송금 내역 조회 성공")
+    void getRemittanceListBetween_success() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .build()
+                ));
+        LocalDateTime createdAt1 = LocalDateTime.of(
+                2024, 5, 5,
+                0, 0
+        );
+        List<Remittance> remittanceList = List.of(
+                Remittance.builder()
+                        .receivingAccountNumber("1122334455")
+                        .amount(1000)
+                        .accountBalanceSnapshot(0)
+                        .createdAt(createdAt1)
+                        .build()
+        );
+        given(remittanceRepository.findAllByAccountOrderByCreatedAtBetweenDesc(
+                any(), any(), any())
+        ).willReturn(remittanceList);
+
+        //when
+        List<RemittanceDto> remittanceDtoList = remittanceService.getRemittanceList(
+                1L, user,
+                LocalDateTime.of(
+                        2024, 5, 1,
+                        0, 0
+                ),
+                LocalDateTime.of(
+                        2024, 5, 10,
+                        0, 0
+                )
+        );
+
+        //then
+        assertEquals("1122334455", remittanceDtoList.get(0).receivingAccountNumber());
+        assertEquals(1000, remittanceDtoList.get(0).remittanceAmount());
+        assertEquals(0, remittanceDtoList.get(0).accountBalanceSnapshot());
+        assertEquals(createdAt1, remittanceDtoList.get(0).createdAt());
+    }
+
+    @Test
+    @DisplayName("기간 내 송금 내역 조회 실패 - 존재하지 않는 계좌")
+    void getRemittanceListBetween_fail_AccountNotFound() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> remittanceService.getRemittanceList(
+                        1L, user,
+                        LocalDateTime.of(
+                                2024, 5, 1,
+                                0, 0
+                        ),
+                        LocalDateTime.of(
+                                2024, 5, 10,
+                                0, 0
+                        )
+                )
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_NOT_FOUND, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("기간 내 송금 내역 조회 실패 - 계좌 소유주 다름")
+    void getRemittanceListBetween_fail_AccountUserUnMatch() {
+        //given
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("root1")
+                .password("root1")
+                .role(Authority.ROLE_USER)
+                .build();
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("root2")
+                .password("root2")
+                .role(Authority.ROLE_USER)
+                .build();
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user1)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> remittanceService.getRemittanceList(
+                        1L, user2,
+                        LocalDateTime.of(
+                                2024, 5, 1,
+                                0, 0
+                        ),
+                        LocalDateTime.of(
+                                2024, 5, 10,
+                                0, 0
+                        )
+                )
+        );
+
+        //then
+        assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
     }
 }
