@@ -6,13 +6,17 @@ import com.sskkilm.cashflow.entity.User;
 import com.sskkilm.cashflow.service.RemittanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,22 +33,28 @@ public class RemittanceController {
     }
 
     @GetMapping("/remittances/{accountId}")
-    public List<RemittanceDto> getRemittanceList(
+    public Slice<RemittanceDto> getRemittanceList(
+            @PageableDefault(
+                    size = 30, sort = "createdAt", direction = Sort.Direction.DESC
+            ) Pageable pageable,
             @PathVariable Long accountId,
             @AuthenticationPrincipal User user
     ) {
-        return remittanceService.getRemittanceList(accountId, user);
+        return remittanceService.getRemittanceList(pageable, accountId, user);
     }
 
     @GetMapping(value = "/remittances/{accountId}", params = {"startDate", "endDate"})
-    public List<RemittanceDto> getRemittanceList(
+    public Page<RemittanceDto> getRemittanceList(
+            @PageableDefault(
+                    size = 30, sort = "createdAt", direction = Sort.Direction.DESC
+            ) Pageable pageable,
             @PathVariable Long accountId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @AuthenticationPrincipal User user
     ) {
         return remittanceService.getRemittanceList(
-                accountId, user, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX)
+                pageable, accountId, user, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX)
         );
     }
 }
