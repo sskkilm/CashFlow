@@ -15,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -192,21 +196,24 @@ class RemittanceControllerTest {
                 .password("root")
                 .role(Authority.ROLE_USER)
                 .build();
-        given(remittanceService.getRemittanceList(anyLong(), any()))
-                .willReturn(List.of(
-                                RemittanceDto.builder()
-                                        .receivingAccountNumber("1122334455")
-                                        .remittanceAmount(1000)
-                                        .accountBalanceSnapshot(0)
-                                        .createdAt(
-                                                LocalDateTime.of(
-                                                        2024, 5, 5,
-                                                        0, 0
-                                                )
-                                        )
-                                        .build()
+        List<RemittanceDto> remittanceDtos = List.of(
+                RemittanceDto.builder()
+                        .receivingAccountNumber("1122334455")
+                        .remittanceAmount(1000)
+                        .accountBalanceSnapshot(0)
+                        .createdAt(
+                                LocalDateTime.of(
+                                        2024, 5, 5,
+                                        0, 0
+                                )
                         )
-                );
+                        .build()
+        );
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "created_at")
+        );
+        given(remittanceService.getRemittanceList(any(), anyLong(), any()))
+                .willReturn(new SliceImpl<>(remittanceDtos, pageRequest, false));
 
         //when
         //then
@@ -214,13 +221,13 @@ class RemittanceControllerTest {
                         .with(user(user))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].receivingAccountNumber")
+                .andExpect(jsonPath("$.content[0].receivingAccountNumber")
                         .value("1122334455"))
-                .andExpect(jsonPath("$[0].remittanceAmount")
+                .andExpect(jsonPath("$.content[0].remittanceAmount")
                         .value(1000))
-                .andExpect(jsonPath("$[0].accountBalanceSnapshot")
+                .andExpect(jsonPath("$.content[0].accountBalanceSnapshot")
                         .value(0))
-                .andExpect(jsonPath("$[0].createdAt")
+                .andExpect(jsonPath("$.content[0].createdAt")
                         .value("2024-05-05T00:00:00"))
                 .andDo(print());
     }
@@ -235,21 +242,24 @@ class RemittanceControllerTest {
                 .password("root")
                 .role(Authority.ROLE_USER)
                 .build();
-        given(remittanceService.getRemittanceList(anyLong(), any(), any(), any()))
-                .willReturn(List.of(
-                                RemittanceDto.builder()
-                                        .receivingAccountNumber("1122334455")
-                                        .remittanceAmount(1000)
-                                        .accountBalanceSnapshot(0)
-                                        .createdAt(
-                                                LocalDateTime.of(
-                                                        2024, 5, 5,
-                                                        0, 0
-                                                )
-                                        )
-                                        .build()
+        List<RemittanceDto> remittanceDtos = List.of(
+                RemittanceDto.builder()
+                        .receivingAccountNumber("1122334455")
+                        .remittanceAmount(1000)
+                        .accountBalanceSnapshot(0)
+                        .createdAt(
+                                LocalDateTime.of(
+                                        2024, 5, 5,
+                                        0, 0
+                                )
                         )
-                );
+                        .build()
+        );
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        given(remittanceService.getRemittanceList(any(), anyLong(), any(), any(), any()))
+                .willReturn(new PageImpl<>(remittanceDtos, pageRequest, 1));
 
         //when
         //then
@@ -259,13 +269,13 @@ class RemittanceControllerTest {
                         .param("endDate", "2024-05-10")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].receivingAccountNumber")
+                .andExpect(jsonPath("$.content[0].receivingAccountNumber")
                         .value("1122334455"))
-                .andExpect(jsonPath("$[0].remittanceAmount")
+                .andExpect(jsonPath("$.content[0].remittanceAmount")
                         .value(1000))
-                .andExpect(jsonPath("$[0].accountBalanceSnapshot")
+                .andExpect(jsonPath("$.content[0].accountBalanceSnapshot")
                         .value(0))
-                .andExpect(jsonPath("$[0].createdAt")
+                .andExpect(jsonPath("$.content[0].createdAt")
                         .value("2024-05-05T00:00:00"))
                 .andDo(print());
     }

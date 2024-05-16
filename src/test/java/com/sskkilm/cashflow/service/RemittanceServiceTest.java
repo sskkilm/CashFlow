@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -383,17 +384,20 @@ class RemittanceServiceTest {
                         .createdAt(createdAt1)
                         .build()
         );
-        given(remittanceRepository.findAllByAccountOrderByCreatedAtDesc(any()))
-                .willReturn(remittanceList);
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        given(remittanceRepository.findAllByAccount(any(), any()))
+                .willReturn(new SliceImpl<>(remittanceList, pageRequest, false));
 
         //when
-        List<RemittanceDto> remittanceDtoList = remittanceService.getRemittanceList(1L, user);
+        Slice<RemittanceDto> remittanceDtoPage = remittanceService.getRemittanceList(pageRequest, 1L, user);
 
         //then
-        assertEquals("1122334455", remittanceDtoList.get(0).receivingAccountNumber());
-        assertEquals(1000, remittanceDtoList.get(0).remittanceAmount());
-        assertEquals(0, remittanceDtoList.get(0).accountBalanceSnapshot());
-        assertEquals(createdAt1, remittanceDtoList.get(0).createdAt());
+        assertEquals("1122334455", remittanceDtoPage.getContent().get(0).receivingAccountNumber());
+        assertEquals(1000, remittanceDtoPage.getContent().get(0).remittanceAmount());
+        assertEquals(0, remittanceDtoPage.getContent().get(0).accountBalanceSnapshot());
+        assertEquals(createdAt1, remittanceDtoPage.getContent().get(0).createdAt());
     }
 
     @Test
@@ -408,10 +412,13 @@ class RemittanceServiceTest {
                 .build();
         given(accountRepository.findById(anyLong()))
                 .willReturn(Optional.empty());
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
 
         //when
         CustomException customException = assertThrows(CustomException.class,
-                () -> remittanceService.getRemittanceList(1L, user)
+                () -> remittanceService.getRemittanceList(pageRequest, 1L, user)
         );
 
         //then
@@ -441,10 +448,13 @@ class RemittanceServiceTest {
                                 .user(user1)
                                 .build()
                 ));
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
 
         //when
         CustomException customException = assertThrows(CustomException.class,
-                () -> remittanceService.getRemittanceList(1L, user2)
+                () -> remittanceService.getRemittanceList(pageRequest, 1L, user2)
         );
 
         //then
@@ -480,12 +490,16 @@ class RemittanceServiceTest {
                         .createdAt(createdAt1)
                         .build()
         );
-        given(remittanceRepository.findAllByAccountOrderByCreatedAtBetweenDesc(
-                any(), any(), any())
-        ).willReturn(remittanceList);
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        given(remittanceRepository.findAllByAccountAndCreatedAt(
+                any(), any(), any(), any())
+        ).willReturn(new PageImpl<>(remittanceList, pageRequest, 1));
 
         //when
-        List<RemittanceDto> remittanceDtoList = remittanceService.getRemittanceList(
+        Page<RemittanceDto> remittanceDtoPage = remittanceService.getRemittanceList(
+                pageRequest,
                 1L, user,
                 LocalDateTime.of(
                         2024, 5, 1,
@@ -498,10 +512,10 @@ class RemittanceServiceTest {
         );
 
         //then
-        assertEquals("1122334455", remittanceDtoList.get(0).receivingAccountNumber());
-        assertEquals(1000, remittanceDtoList.get(0).remittanceAmount());
-        assertEquals(0, remittanceDtoList.get(0).accountBalanceSnapshot());
-        assertEquals(createdAt1, remittanceDtoList.get(0).createdAt());
+        assertEquals("1122334455", remittanceDtoPage.getContent().get(0).receivingAccountNumber());
+        assertEquals(1000, remittanceDtoPage.getContent().get(0).remittanceAmount());
+        assertEquals(0, remittanceDtoPage.getContent().get(0).accountBalanceSnapshot());
+        assertEquals(createdAt1, remittanceDtoPage.getContent().get(0).createdAt());
     }
 
     @Test
@@ -514,12 +528,16 @@ class RemittanceServiceTest {
                 .password("root")
                 .role(Authority.ROLE_USER)
                 .build();
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
         given(accountRepository.findById(anyLong()))
                 .willReturn(Optional.empty());
 
         //when
         CustomException customException = assertThrows(CustomException.class,
                 () -> remittanceService.getRemittanceList(
+                        pageRequest,
                         1L, user,
                         LocalDateTime.of(
                                 2024, 5, 1,
@@ -552,6 +570,9 @@ class RemittanceServiceTest {
                 .password("root2")
                 .role(Authority.ROLE_USER)
                 .build();
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
         given(accountRepository.findById(anyLong()))
                 .willReturn(Optional.of(
                         Account.builder()
@@ -563,6 +584,7 @@ class RemittanceServiceTest {
         //when
         CustomException customException = assertThrows(CustomException.class,
                 () -> remittanceService.getRemittanceList(
+                        pageRequest,
                         1L, user2,
                         LocalDateTime.of(
                                 2024, 5, 1,
@@ -577,5 +599,47 @@ class RemittanceServiceTest {
 
         //then
         assertEquals(AccountErrorCode.ACCOUNT_USER_UN_MATCH, customException.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("기간 내 송금 내역 조회 실패 - 송금 이력 조회는 시작일부터 최대 1년까지 가능")
+    void getRemittanceListBetween_fail_RemittanceHistoryInquiryPeriodLimited() {
+        //given
+        User user = User.builder()
+                .id(1L)
+                .loginId("root")
+                .password("root")
+                .role(Authority.ROLE_USER)
+                .build();
+
+        PageRequest pageRequest = PageRequest.of(
+                0, 30, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        given(accountRepository.findById(anyLong()))
+                .willReturn(Optional.of(
+                        Account.builder()
+                                .id(1L)
+                                .user(user)
+                                .build()
+                ));
+
+        //when
+        CustomException customException = assertThrows(CustomException.class,
+                () -> remittanceService.getRemittanceList(
+                        pageRequest,
+                        1L, user,
+                        LocalDateTime.of(
+                                2023, 5, 1,
+                                0, 0
+                        ),
+                        LocalDateTime.of(
+                                2024, 5, 10,
+                                0, 0
+                        )
+                )
+        );
+
+        //then
+        assertEquals(RemittanceErrorCode.REMITTANCE_HISTORY_INQUIRY_PERIOD_LIMITED, customException.getErrorCode());
     }
 }
