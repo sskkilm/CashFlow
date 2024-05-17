@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_account_createdAt", columnList = "account_id, created_at DESC")
+})
 @EntityListeners(AuditingEntityListener.class)
 public class Remittance {
     @Id
