@@ -5,15 +5,15 @@
 ## Goal
   - Spring Boot 기반 REST API 설계
   - Spring Security를 이용한 인증과 인가 구현 (JWT)
+  - Controller 및 Service 계층의 Unit 테스트
 
 ## Tech Stack
 <div align=center> 
   <img src="https://img.shields.io/badge/java-007396?style=for-the-badge&logo=java&logoColor=white"> 
   <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+  <img src="https://img.shields.io/badge/springsecurity-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+  <img src="https://img.shields.io/badge/Spring_data_jpa-6DB33F?style=for-the-badge&logo=SpringSecurity&logoColor=white">
   <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> 
-  <img src="https://img.shields.io/badge/springsecurity-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"> 
-  <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> 
-  <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
 </div>
 
 ## 프로젝트 기능 및 설계
@@ -69,8 +69,3 @@
 
 ## ERD
 ![ERD](docs/img/CashFlow.png)
-
-## Trouble Shooting
-[trouble shooting section](docs/TROUBLE_SHOOTING.md)
-
-## Something To Improve
